@@ -36,8 +36,8 @@ class DHT11:
         buffer = self._convert_pulses_to_buffer(pulses)
         self._verify_checksum(buffer)
 
-        self._humidity = buffer[0]
-        self._temperature = buffer[2]
+        self._humidity = buffer[0] + buffer[1] / 10
+        self._temperature = buffer[2] + buffer[3] / 10
         self._last_measure = utime.ticks_us()
 
     @property
@@ -99,7 +99,6 @@ class DHT11:
         buffer = array.array("B")
         for shift in range(4, -1, -1):
             buffer.append(binary >> shift * 8 & 0xFF)
-
         return buffer
 
     def _verify_checksum(self, buffer):
