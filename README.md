@@ -34,3 +34,9 @@ try:
 except InvalidChecksum:
     print("Checksum from the sensor was invalid")
 ```
+
+## main.py
+
+This repo contains a main.py file that expects the Pico to be in a [Pico
+Explorer Base from Pimoroni](https://shop.pimoroni.com/products/pico-explorer-base),
+flashed with [their build of Micropython](https://github.com/pimoroni/pimoroni-pico/releases)
