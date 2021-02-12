@@ -41,12 +41,4 @@ This repo contains a main.py file that expects the Pico to be in a [Pico
 Explorer Base from Pimoroni](https://shop.pimoroni.com/products/pico-explorer-base),
 flashed with [their build of Micropython](https://github.com/pimoroni/pimoroni-pico/releases)
 
-## Issues
-
-For some reason, when polling every two seconds, I'm getting a completely
-invalid read 5-10% of the time. Haven't had time to debug it properly yet, but
-if `InvalidChecksum` is raised, you can retry in a second and it usually works
-at that point. The `main.py` file does show the ratio between valid and invalid
-checks.
-
 ![testing](.testing.jpg)

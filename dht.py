@@ -1,18 +1,21 @@
 import array
 
+import micropython
 import utime
 from machine import Pin
+from micropython import const
 
 
 class InvalidChecksum(Exception):
     pass
 
 
-class DHT11:
-    high_level: int = 50
-    max_unchanged: int = 100
-    min_interval_us: int = 200000
+MAX_UNCHANGED = const(100)
+MIN_INTERVAL_US = const(200000)
+HIGH_LEVEL = const(50)
 
+
+class DHT11:
     _temperature: int
     _humidity: int
 
@@ -24,9 +27,9 @@ class DHT11:
 
     def measure(self):
         current_ticks = utime.ticks_us()
-        if utime.ticks_diff(
-            current_ticks, self._last_measure
-        ) < self.min_interval_us and (self._temperature > -1 or self._humidity > -1):
+        if utime.ticks_diff(current_ticks, self._last_measure) < MIN_INTERVAL_US and (
+            self._temperature > -1 or self._humidity > -1
+        ):
             # Less than a second since last read, which is too soon according
             # to the datasheet
             return
@@ -57,28 +60,30 @@ class DHT11:
         self._pin.value(0)
         utime.sleep_ms(18)
 
+    @micropython.native
     def _capture_pulses(self):
-        self._pin.init(Pin.IN, Pin.PULL_UP)
+        pin = self._pin
+        pin.init(Pin.IN, Pin.PULL_UP)
+
         val = 1
-        transitions = []
+        idx = 0
+        transitions = bytearray(84)
         unchanged = 0
-        while unchanged < self.max_unchanged:
-            if val != self._pin.value():
-                transitions.append(utime.ticks_us())
+        timestamp = utime.ticks_us()
+
+        while unchanged < MAX_UNCHANGED:
+            if val != pin.value():
+                now = utime.ticks_us()
+                transitions[idx] = now - timestamp
+                timestamp = now
+                idx += 1
+
                 val = 1 - val
                 unchanged = 0
             else:
                 unchanged += 1
-        self._pin.init(Pin.OUT, Pin.PULL_DOWN)
-
-        # We only want the last 81 transitions to calculate 80 bits
-        transitions = transitions[-81:]
-
-        # Return the pulse times
-        return [
-            utime.ticks_diff(transitions[i + 1], transitions[i])
-            for i in range(len(transitions) - 1)
-        ]
+        pin.init(Pin.OUT, Pin.PULL_DOWN)
+        return transitions[4:]
 
     def _convert_pulses_to_buffer(self, pulses):
         """Convert a list of 80 pulses into a 5 byte buffer
@@ -93,7 +98,7 @@ class DHT11:
         # Convert the pulses to 40 bits
         binary = 0
         for idx in range(0, len(pulses), 2):
-            binary = binary << 1 | int(pulses[idx] > self.high_level)
+            binary = binary << 1 | int(pulses[idx] > HIGH_LEVEL)
 
         # Split into 5 bytes
         buffer = array.array("B")
