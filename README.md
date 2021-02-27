@@ -1,3 +1,5 @@
+# The library has moved over to [ikornaselur/pico-libs](https://github.com/ikornaselur/pico-libs)
+
 # DHT11 sensor library
 
 A library to read from a DHT11 sensor connected to a Raspberry PIco
